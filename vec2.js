@@ -25,6 +25,7 @@ class vec2 {
     let distance = Math.sqrt(dx * dx + dy * dy);
     return distance;
   }
+    
   limit(limit) {
     if(this.mag() > limit) {
       this.norm();

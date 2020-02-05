@@ -1,10 +1,10 @@
-const MAXSPEED = 5;
+const MAXSPEED = 2;
 const MAXFORCE = .03;
 const ALIGNMENT_WEIGHT  = 1;
 const COHESION_WEIGHT   = 1;
 const SEPARATION_WEIGHT = 5;
 const FLIGHT_WEIGHT = 15;
-const BOUNDS_WEIGHT = 1;
+const BOUNDS_WEIGHT = 0.01;
 
 class Boid {
 
@@ -15,19 +15,24 @@ class Boid {
         this.pos = vec2.create(x, y);
         this.vel = vec2.fromAngleAndMagnitude(Math.random() * Math.PI * 2, 3);
         this.acc = vec2.create(0, 0);
+        this.angle = this.vel.getAngle();
+        this.fear_level = 0.1;
 
         this.size = 10;
-        this.angle = this.vel.getAngle();
-        this.radius = 100;
+        this.cohere_field = 8 * this.size;
+        this.vision_field = 30;
+        this.color;
+        this.opacity;
+        this.speed;
+        this.animation_level;
 
-        this.fear = 0.1;
 
     }
 
     update(boids, noises) {
 
         let nearBoids = boids.filter(b => {
-            return (this.pos.distanceTo(b.pos) < this.radius && b != this);
+            return (this.pos.distanceTo(b.pos) < this.cohere_field && b != this);
         });
 
         let total = vec2.create(0, 0);
@@ -39,7 +44,7 @@ class Boid {
         }
 
         total.add(vec2.mult(this.fleeNoises(noises), FLIGHT_WEIGHT));
-        total.add(vec2.mult(this.stayInside(this.aquarium), BOUNDS_WEIGHT));
+        total.add(vec2.mult(this.stayInside(), BOUNDS_WEIGHT));
         
 
         this.acc = total;
@@ -147,37 +152,34 @@ class Boid {
         sum.mult(this.vel.mag() * 2);
 
         if(sum.mag() > 0)
-            this.fear = sum.mag() * 5 + 0.1;
-        else this.fear = 0.1;
+            this.fear_level = sum.mag() * 5 + 0.1;
+        else this.fear_level = 0.1;
 
         return sum;
     }
 
-    stayInside(a) {
-        
-        let visionField = (100 / a.width);
+    stayInside() {
 
         let sum = vec2.create(0, 0);
-
         
-        if (this.pos.x < a.pos.x + this.radius + visionField) {
-            let mult = this.pos.distanceTo(vec2.create(a.pos.x, this.pos.y)) / 100;
-            sum.x = 1;
-            
+        if (this.pos.x < this.aquarium.pos.x + this.vision_field) {
+            let mult = this.pos.distanceTo(vec2.create(this.aquarium.pos.x, this.pos.y));
+            sum.x = mult;
             }
-        else if (this.pos.x > a.pos.x + a.width - this.radius - visionField) {
-            let mult = this.pos.distanceTo(vec2.create(a.pos.x + a.width, this.pos.y)) / 100;
-            sum.x = -1;
+        else if (this.pos.x > this.aquarium.pos.x + this.aquarium.width - this.vision_field) {
+            let mult = this.pos.distanceTo(vec2.create(this.aquarium.pos.x + this.aquarium.width, this.pos.y));
+            //console.log(mult);
+            sum.x = -mult;
             }
         
-        if(this.pos.y < a.pos.y + this.radius + visionField) {
-            let mult = this.pos.distanceTo(vec2.create(this.pos.x, a.pos.y)) / 100;
-            sum.y = 1;
+        if(this.pos.y < this.aquarium.pos.y + this.vision_field) {
+            let mult = this.pos.distanceTo(vec2.create(this.pos.x, this.aquarium.pos.y));
+            sum.y = mult;
             
         }
-        else if (this.pos.y > a.pos.y + a.height - this.radius - visionField) {
-            let mult = this.pos.distanceTo(vec2.create(this.pos.x, a.pos.y + a.height)) / 100;
-            sum.y = -1;
+        else if (this.pos.y > this.aquarium.pos.y + this.aquarium.height - this.vision_field) {
+            let mult = this.pos.distanceTo(vec2.create(this.pos.x, this.aquarium.pos.y + this.aquarium.height));
+            sum.y = -mult;
             
         }
 
@@ -194,8 +196,8 @@ class Boid {
 
             destination.norm();
 
-            if(distance < this.radius)
-                destination.mult(MAXSPEED * (distance / this.radius));
+            if(distance < this.cohere_field)
+                destination.mult(MAXSPEED * (distance / this.cohere_field));
             else
                 destination.mult(MAXSPEED);
 
@@ -211,7 +213,7 @@ class Boid {
 
     render() {
 
-        ctx.fillStyle = 'rgba(20, 20, 20, ' + this.fear + ')';
+        ctx.fillStyle = 'rgba(20, 20, 20, ' + this.fear_level + ')';
         ctx.save();
 
         ctx.translate(this.pos.x, this.pos.y);
