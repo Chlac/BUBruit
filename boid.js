@@ -24,8 +24,31 @@ class Boid {
 
     }
 
-    move() {
+    update(boids, noises) {
+
+        let nearBoids = boids.filter(b => {
+            return (this.pos.distanceTo(b.pos) < this.radius && b != this);
+        });
+
+        let total = vec2.create(0, 0);
+
+        if(nearBoids.length != 0) {
+            total.add(vec2.mult(this.align(nearBoids), ALIGNMENT_WEIGHT));
+            total.add(vec2.mult(this.cohere(nearBoids), COHESION_WEIGHT));
+            total.add(vec2.mult(this.separate(nearBoids), SEPARATION_WEIGHT));
+        }
+
+        total.add(vec2.mult(this.fleeNoises(noises), FLIGHT_WEIGHT));
+        total.add(vec2.mult(this.stayInside(this.aquarium), BOUNDS_WEIGHT));
         
+
+        this.acc = total;
+        
+        this.move();
+
+    }
+
+    move() {
 
         this.vel.add(this.acc);
         this.vel.limit(MAXSPEED);
@@ -47,28 +70,6 @@ class Boid {
         }
 
         this.acc.mult(0);
-
-    }
-
-    adjustToNearBoids(boids, noises, aquarium) {
-
-        let nearBoids = boids.filter(b => {
-            return (this.pos.distanceTo(b.pos) < this.radius && b != this);
-        });
-
-        let total = vec2.create(0, 0);
-
-        if(nearBoids.length != 0) {
-            total.add(vec2.mult(this.align(nearBoids), ALIGNMENT_WEIGHT));
-            total.add(vec2.mult(this.cohere(nearBoids), COHESION_WEIGHT));
-            total.add(vec2.mult(this.separate(nearBoids), SEPARATION_WEIGHT));
-        }
-
-        total.add(vec2.mult(this.fleeNoises(noises), FLIGHT_WEIGHT));
-        total.add(vec2.mult(this.stayInside(this.aquarium), BOUNDS_WEIGHT));
-        
-
-        this.acc = total;
 
     }
 
@@ -158,29 +159,24 @@ class Boid {
 
         let sum = vec2.create(0, 0);
 
-            console.log("Vision", visionField);
         
         if (this.pos.x < a.pos.x + this.radius + visionField) {
             let mult = this.pos.distanceTo(vec2.create(a.pos.x, this.pos.y)) / 100;
-            console.log("Mult left", mult);
             sum.x = 1;
             
             }
         else if (this.pos.x > a.pos.x + a.width - this.radius - visionField) {
             let mult = this.pos.distanceTo(vec2.create(a.pos.x + a.width, this.pos.y)) / 100;
-            console.log("Mult right", mult);
             sum.x = -1;
             }
         
         if(this.pos.y < a.pos.y + this.radius + visionField) {
             let mult = this.pos.distanceTo(vec2.create(this.pos.x, a.pos.y)) / 100;
-            console.log("Mult top", mult);
             sum.y = 1;
             
         }
         else if (this.pos.y > a.pos.y + a.height - this.radius - visionField) {
-            let mult = this.pos.distanceTo(vec2.create(this.pos.x, a.pos.y + a.height)) / 100; 
-            console.log("Mult bottom", mult);
+            let mult = this.pos.distanceTo(vec2.create(this.pos.x, a.pos.y + a.height)) / 100;
             sum.y = -1;
             
         }

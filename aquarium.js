@@ -15,9 +15,7 @@ class Aquarium {
     
     update(noises) {
 
-        this.boids.map(b => b.adjustToNearBoids(this.boids, noises));
-        this.boids.map(b => b.move());
-        
+        this.boids.map(b => b.update(this.boids, noises));
     }
 
 

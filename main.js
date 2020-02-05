@@ -81,7 +81,7 @@ const update = () => {
     noises = noises.filter(o => o.strength != 0);
     noises.map(o => o.render());
 
-    ctx.fillStyle = 'rgba(20, 20, 20, 0.7)'
+    //ctx.fillStyle = 'rgba(20, 20, 20, 0.7)'
     //ctx.fillText('Total boids: ' + boids.length, 5, 5);
 
     requestAnimationFrame(update);
