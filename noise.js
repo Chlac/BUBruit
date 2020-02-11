@@ -18,7 +18,7 @@ class Noise {
     }
 
   render() {
-      
+
     ctx.strokeStyle = 'rgba(20, 20, 20, ' + (1 * this.strength) + ')';
     ctx.beginPath();
     ctx.arc(this.pos.x, this.pos.y, this.size, 0, 2 * Math.PI);

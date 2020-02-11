@@ -1,9 +1,10 @@
-let canvas, ctx, num_aquariums, aquariums, noises;
+let canvas, ctx, num_aquariums, aquariums, noises,histo,frame;
 
 onload = () => {
 
     aquariums = [];
     noises = [];
+    frame =0;
 
     num_aquariums = 9;
 
@@ -12,6 +13,8 @@ onload = () => {
 
     canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
+
+    histo = new Histo (canvas.width/2,canvas.height/2,100);
 
     let num_rows = 3;
     let num_cols = 3;
@@ -49,18 +52,26 @@ onload = () => {
         }
     }
 
+    
+
 
     ctx.font = "30px Arial";
     ctx.textAlign = "left";
     ctx.textBaseline = "hanging";
+
+   
 
     update();
 }
 
 onclick = (e) => {
 
-    if(e.button == 0)
-        noises.push(new Noise(e.pageX, e.pageY));
+    if(e.button == 0){
+        let noise = new Noise(e.pageX, e.pageY);
+        noises.push(noise);
+        histo.addRing(noise);
+    }
+        
 }
 
 oncontextmenu = (e) => {
@@ -71,12 +82,24 @@ oncontextmenu = (e) => {
 const update = () => {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
 
     for(let aquarium of aquariums) {
         aquarium.update(noises);
         aquarium.render();
     }
 
+    //A Way to compute the "time"
+    if(frame < 100){
+        frame++;
+        
+    }else{
+        console.log(frame);
+        histo.render();
+        frame = 0 ;
+    }
+    
+    
     noises.map(o => o.update());
     noises = noises.filter(o => o.strength != 0);
     noises.map(o => o.render());
