@@ -11,10 +11,15 @@ onload = () => {
     canvas  = document.querySelector('canvas');
     ctx     = canvas.getContext('2d');
 
+    canvasHisto = document.getElementById("histo");
+    ctxHisto = canvasHisto.getContext('2d');
+
     canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
+    ctxHisto.width = window.innerWidth;
+    ctxHisto.height = window.innerHeight;
 
-    histo = new Histo (canvas.width/2,canvas.height/2,100);
+    histo = new Histo (ctxHisto.width/2,ctxHisto.height/2,200);
 
     let num_rows = 3;
     let num_cols = 3;
@@ -90,12 +95,13 @@ const update = () => {
     }
 
     //A Way to compute the "time"
-    if(frame < 100){
+    if(frame < 500){
         frame++;
         
-    }else{
-        console.log(frame);
         histo.render();
+    }else{
+        console.log("frame= "+frame);
+        histo.update();
         frame = 0 ;
     }
     

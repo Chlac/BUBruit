@@ -1,0 +1,16 @@
+#wrapper
+{
+    position:relative;    
+}
+
+
+#fishTank
+{
+    position:absolute;
+    z-index:1;
+}
+#histo
+{
+    position:absolute;
+    z-index:0;
+}
