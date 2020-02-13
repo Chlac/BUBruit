@@ -16,12 +16,12 @@ onload = () => {
 
     canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
-    
+
     //Taille du cavas pour les données
     ctxVisuData.width = window.innerWidth;
     ctxVisuData.height = window.innerHeight;
 
-    disque = new Disque (ctxVisuData.width/2,ctxVisuData.height/2,200,10);
+    disque = new Disque (ctxVisuData.width/2,ctxVisuData.height/2,200,10,10);
 
     let num_rows = 3;
     let num_cols = 3;

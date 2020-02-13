@@ -4,11 +4,11 @@ class Disque {
      * 
      * @param {*} x Coordonée x du centre du disque
      * @param {*} y coordonée y du centre du disque 
-     * @param {*} size Taille du cercle interieur()
+     * @param {*} size Taille du cercle interieur
      * @param {*} width largeur du disque 
+     * @param {*} nbRing nombre d'anneau
      */
-    constructor(x, y, size,width){
-        //width, height) {
+    constructor(x, y, size,width,nbRing){
 
         this.pos = vec2.create(x, y);
         this.size = size;
@@ -16,6 +16,8 @@ class Disque {
         //this.height = height;
         this.rings = [];
         this.bruitActuel=0;
+        this.witdh = width;
+        this.nbRing = nbRing; 
 
         
     }
@@ -47,7 +49,7 @@ class Disque {
         
         let size = this.size;        
         for(let i = this.rings.length-1;i>=0;i--){
-            size=size+width;
+            size=size+this.witdh;
             ctxVisuData.save();
             console.log("this.rings["+i+"] = "+this.rings[i]);
             //ctxHisto.lineWidth = this.rings[i];
@@ -55,7 +57,7 @@ class Disque {
            ctxVisuData.strokeStyle = 'rgba(20, 20, 20, ' + (0) + ')';
            ctxVisuData.beginPath();
             //disque
-           ctxVisuData.arc(this.pos.x, this.pos.y, size+width, 0, 2 * Math.PI);
+           ctxVisuData.arc(this.pos.x, this.pos.y, size+this.witdh, 0, 2 * Math.PI);
             ctxVisuData.arc(this.pos.x, this.pos.y, size, 0, 2 * Math.PI,true);
 
             ctxVisuData.stroke();
@@ -69,10 +71,10 @@ class Disque {
             ctxVisuData.fill();
             ctxVisuData.restore();
         }
-        //console.log('fin render');   
+
         
         
-        if (this.rings.length > 20){
+        if (this.rings.length > this.nbRing ){
             this.rings=[];
             
             size=this.size;
