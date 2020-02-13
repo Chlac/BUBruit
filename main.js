@@ -88,12 +88,6 @@ const update = () => {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-
-    for(let aquarium of aquariums) {
-        aquarium.update(noises);
-        aquarium.render();
-    }
-
     //A Way to compute the "time"
     if(frame < 500){
         frame++;
@@ -104,7 +98,13 @@ const update = () => {
         histo.update();
         frame = 0 ;
     }
-    
+
+
+    for(let aquarium of aquariums) {
+        aquarium.update(noises);
+        aquarium.render();
+    }
+
     
     noises.map(o => o.update());
     noises = noises.filter(o => o.strength != 0);

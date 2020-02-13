@@ -60,6 +60,7 @@ class Histo {
            // console.log("this ring["+ring+"] ="+this.rings[ring]);
             ctxHisto.strokeStyle = 'rgba(20, 20, 20, ' + (1 ) + ')';
             ctxHisto.beginPath();
+            //disque
             ctxHisto.arc(this.pos.x, this.pos.y, size+10, 0, 2 * Math.PI);
             ctxHisto.arc(this.pos.x, this.pos.y, size, 0, 2 * Math.PI,true);
 
