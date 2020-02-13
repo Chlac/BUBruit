@@ -1,4 +1,4 @@
-let canvas, ctx, num_aquariums, aquariums, noises,histo,frame;
+let canvas, ctx,ctxVisuData, num_aquariums, aquariums, noises,disque,frame;
 
 onload = () => {
 
@@ -12,14 +12,16 @@ onload = () => {
     ctx     = canvas.getContext('2d');
 
     canvasHisto = document.getElementById("histo");
-    ctxHisto = canvasHisto.getContext('2d');
+    ctxVisuData = canvasHisto.getContext('2d');
 
     canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
-    ctxHisto.width = window.innerWidth;
-    ctxHisto.height = window.innerHeight;
+    
+    //Taille du cavas pour les données
+    ctxVisuData.width = window.innerWidth;
+    ctxVisuData.height = window.innerHeight;
 
-    histo = new Histo (ctxHisto.width/2,ctxHisto.height/2,200);
+    disque = new Disque (ctxVisuData.width/2,ctxVisuData.height/2,200,10);
 
     let num_rows = 3;
     let num_cols = 3;
@@ -74,7 +76,7 @@ onclick = (e) => {
     if(e.button == 0){
         let noise = new Noise(e.pageX, e.pageY);
         noises.push(noise);
-        histo.addRing(noise);
+        disque.addRing(noise);
     }
         
 }
@@ -86,20 +88,20 @@ oncontextmenu = (e) => {
 
 const update = () => {
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
     
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     //A Way to compute the "time"
-    if(frame < 500){
+    if(frame < 100){
         frame++;
         
-        histo.render();
+        disque.render();
     }else{
         console.log("frame= "+frame);
-        histo.update();
+        disque.update();
         frame = 0 ;
     }
 
-
+    
     for(let aquarium of aquariums) {
         aquarium.update(noises);
         aquarium.render();
