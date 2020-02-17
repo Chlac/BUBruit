@@ -1,4 +1,4 @@
-let canvas, ctx,ctxVisuData, num_aquariums, aquariums, noises,disque,frame;
+let canvas, ctx,ctxVisuData, num_aquariums, aquariums, noises,disque,histo,frame;
 
 onload = () => {
 
@@ -21,8 +21,8 @@ onload = () => {
     ctxVisuData.width = window.innerWidth;
     ctxVisuData.height = window.innerHeight;
 
-    disque = new Disque (ctxVisuData.width/2,ctxVisuData.height/2,200,10,10);
-
+    //disque = new Disque (ctxVisuData.width/2,ctxVisuData.height/2,200,10,10);
+    histo = new Histogram(ctxVisuData.width/2,ctxVisuData.height/2,100)
     let num_rows = 3;
     let num_cols = 3;
 
@@ -76,7 +76,8 @@ onclick = (e) => {
     if(e.button == 0){
         let noise = new Noise(e.pageX, e.pageY);
         noises.push(noise);
-        disque.addRing(noise);
+        histo.update(10);
+        //disque.addRing(noise);
     }
         
 }
@@ -94,13 +95,13 @@ const update = () => {
     if(frame < 100){
         frame++;
         
-        disque.render();
+       // histo.render();
     }else{
         console.log("frame= "+frame);
-        disque.update();
+        //histo.update(10);
         frame = 0 ;
     }
-
+    histo.render();
     
     for(let aquarium of aquariums) {
         aquarium.update(noises);
