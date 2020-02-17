@@ -6,7 +6,7 @@ class Disque {
      * @param {*} y coordonée y du centre du disque 
      * @param {*} size Taille du cercle interieur
      * @param {*} width largeur du disque 
-     * @param {*} nbRing nombre d'anneau
+     * @param {*} nbRing nombre d'anneaux
      */
     constructor(x, y, size,width,nbRing){
 
@@ -24,14 +24,7 @@ class Disque {
         
     }
     
-    /**
-     * à modifier pour ajouter le bruit
-     * @param {*} noises 
-     */
-    addRing(noises){
-        this.bruitActuel ++;
-    }
-    
+
 /**
  * Insere un bruit, on pouse les autres anneaux
  * @param {*Noise[]} noises 
