@@ -1,4 +1,4 @@
-let canvas, ctx, aquariums, noises,ctxVisuData;
+let canvas, ctx, aquariums, noises,ctxVisuData,history;
 let audioContext = null;
 let audiometer = null;
 
@@ -6,6 +6,7 @@ onload = () => {
 
     aquariums = [];
     noises = [];
+    history= []; //historique pour la visdu de disque.js
     frame =0;
 
     canvas  = document.querySelector('canvas');
@@ -96,6 +97,7 @@ function processAudioChunk( time ) {
     // SOUS LE SEUIL
 
     noises.push(new Noise(meter.volume, canvas.width / 2, canvas.height / 2));
+    history.push(meter.volume); // on récupere le volume
     //console.log(meter.volume);
 }
 
@@ -214,14 +216,17 @@ const update = () => {
 
     
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    //A Way to compute the "time"
-    if(frame < 100){
-        frame++;
-        
-        disque.render();
+
+    /**
+     * Rendu du disque d'historique, selon un certaine nombre de frame
+     */
+    if(frame < 200){
+        frame++;     
+        disque.render(); 
     }else{
-        console.log("frame= "+frame);
-        disque.update();
+        //console.log(noises)
+        disque.update(history);
+        history= []; //on reset l'historique
         frame = 0 ;
     }
 
