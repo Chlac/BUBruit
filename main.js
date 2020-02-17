@@ -22,8 +22,9 @@ onload = () => {
     ctxVisuData.width = window.innerWidth;
     ctxVisuData.height = window.innerHeight;
 
-    //disque = new Disque (ctxVisuData.width/2,ctxVisuData.height/2,200,10,10);
-    histo = new Histogram(ctxVisuData.width/2,ctxVisuData.height/2,100)
+    disque = new Disque (ctxVisuData.width/2,ctxVisuData.height/2,200,10,10);
+    histo = new Histogram(ctxVisuData.width/2,ctxVisuData.height/2,50,60)
+
     let num_rows = 3;
     let num_cols = 3;
 
@@ -98,6 +99,7 @@ function processAudioChunk( time ) {
 
     noises.push(new Noise(meter.volume, canvas.width / 2, canvas.height / 2));
     history.push(meter.volume); // on récupere le volume
+    histo.update(meter.volume);
     //console.log(meter.volume);
 }
 
@@ -218,25 +220,16 @@ const update = () => {
     
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    /**
-     * Rendu du disque d'historique, selon un certaine nombre de frame
-     */
-    if(frame < 200){
-        frame++;     
-        disque.render(); 
-        // histo.render();
-    }else{
-        //console.log(noises)
-        disque.update(history);
-        history= []; //on reset l'historique
-        frame = 0 ;
-    }
-    histo.render();
+    disqueVisu();
+
+    
     
     for(let aquarium of aquariums) {
         aquarium.update(noises);
         aquarium.render();
     }
+
+    histo.render();
 
     
     noises.map(o => o.update());
@@ -249,3 +242,20 @@ const update = () => {
     requestAnimationFrame(update);
 
 }
+/**
+ * Rendu du disque d'historique, selon un certaine nombre de frame
+ */
+function disqueVisu() {
+    if (frame < 200) {
+        frame++;
+        disque.render();
+        // histo.render();
+    }
+    else {
+        //console.log(noises)
+        disque.update(history);
+        history = []; //on reset l'historique
+        frame = 0;
+    }
+}
+
