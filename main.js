@@ -1,4 +1,4 @@
-let canvas, ctx, aquariums, noises;
+let canvas, ctx, aquariums, noises,ctxVisuData,history;
 let audioContext = null;
 let audiometer = null;
 
@@ -6,12 +6,23 @@ onload = () => {
 
     aquariums = [];
     noises = [];
+    history= []; //historique pour la visdu de disque.js
+    frame =0;
 
     canvas  = document.querySelector('canvas');
     ctx     = canvas.getContext('2d');
 
+    canvasHisto = document.getElementById("histo");
+    ctxVisuData = canvasHisto.getContext('2d');
+
     canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
+
+    //Taille du cavas pour les données
+    ctxVisuData.width = window.innerWidth;
+    ctxVisuData.height = window.innerHeight;
+
+    disque = new Disque (ctxVisuData.width/2,ctxVisuData.height/2,200,10,10);
 
     let num_rows = 3;
     let num_cols = 3;
@@ -50,6 +61,8 @@ onload = () => {
         }
     }
 
+    
+
 
     ctx.font = "15px Arial";
     ctx.textAlign = "left";
@@ -84,11 +97,18 @@ function processAudioChunk( time ) {
     // SOUS LE SEUIL
 
     noises.push(new Noise(meter.volume, canvas.width / 2, canvas.height / 2));
+    history.push(meter.volume); // on récupere le volume
     //console.log(meter.volume);
 }
 
 onclick = (e) => {
 
+    /*if(e.button == 0){
+        let noise = new Noise(e.pageX, e.pageY);
+        noises.push(noise);
+        disque.addRing(noise);
+    }
+    */
     if(audioContext == null) {
 
         // monkeypatch Web Audio
@@ -194,13 +214,29 @@ const update = () => {
 
     processAudioChunk();
 
+    
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    /**
+     * Rendu du disque d'historique, selon un certaine nombre de frame
+     */
+    if(frame < 200){
+        frame++;     
+        disque.render(); 
+    }else{
+        //console.log(noises)
+        disque.update(history);
+        history= []; //on reset l'historique
+        frame = 0 ;
+    }
+
+    
     for(let aquarium of aquariums) {
         aquarium.update(noises);
         aquarium.render();
     }
 
+    
     noises.map(o => o.update());
     noises = noises.filter(o => o.strength != 0);
     noises.map(o => o.render());
