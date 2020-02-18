@@ -33,17 +33,17 @@ onload = () => {
             );
 
             if(i != 1 || j != 1)
-            aquarium.addBoids(
-                Array(15)
-                .fill()
-                .map(
-                    b => new Boid(
-                        Math.random() * aquarium.width + aquarium.pos.x,
-                        Math.random() * aquarium.height + aquarium.pos.y,
-                        aquarium
+                aquarium.addBoids(
+                    Array(15)
+                    .fill()
+                    .map(
+                        b => new Boid(
+                            Math.random() * aquarium.width + aquarium.pos.x,
+                            Math.random() * aquarium.height + aquarium.pos.y,
+                            aquarium
+                        )
                     )
-                )
-            );
+                );
 
             aquariums.push(aquarium);
 
@@ -100,32 +100,32 @@ onclick = (e) => {
 
         // Attempt to get audio input
         try {
-            // monkeypatch getUserMedia
-            navigator.getUserMedia = 
-                navigator.getUserMedia ||
-                navigator.webkitGetUserMedia ||
-                navigator.mozGetUserMedia;
 
-            // ask for an audio input
-            navigator.getUserMedia(
-                {
-                    "audio": {
-                        "mandatory": {
-                            "googEchoCancellation": "false",
-                            "googAutoGainControl": "false",
-                            "googNoiseSuppression": "false",
-                            "googHighpassFilter": "false"
-                        },
-                        "optional": []
+
+            var constraints = {
+                "audio": {
+                    "mandatory": {
+                        "googEchoCancellation": "false",
+                        "googAutoGainControl": "false",
+                        "googNoiseSuppression": "false",
+                        "googHighpassFilter": "false"
                     },
-                }, onMicrophoneGranted, onMicrophoneDenied);
+                    "optional": []
+                },
+            }; 
+
+            navigator.mediaDevices.getUserMedia(constraints)
+                .then(onMicrophoneGranted)
+                .catch(function(err) { console.log(err.name + ": " + err.message); });
+
         } catch (e) {
-            alert('getUserMedia threw exception :' + e);
+            console.log(err.name + ": " + err.message);
         }
+
     }
-    
+
     noises.push(new Noise(0.05, e.pageX, e.pageY));
-        
+
 }
 
 oncontextmenu = (e) => {
@@ -191,7 +191,7 @@ function volumeAudioProcess( event ) {
 
 
 const update = () => {
-    
+
     processAudioChunk();
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
