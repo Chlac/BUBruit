@@ -102,7 +102,6 @@ class History {
         ctx.translate(this.pos.x, this.pos.y);
         //ctx.rotate(angle);
 
-        let cumulative_heights = 0;
         for (var i = 0; i < this.steps_value.length; i++) {
 
 
@@ -128,15 +127,25 @@ class History {
             // Disks
             //ctx.fillText(step_height, 50, 50);
             //ctx.fillStyle = `rgba(${255 / step_height}, ${255 / step_height}, ${255 / step_height}, 0.1)`;
-            ctx.fillStyle = `rgba(0, 0, 0, ${step_height / 100})`;
-
-            ctx.beginPath();
-            ctx.arc(0, 0, cumulative_heights, 0, 2 * Math.PI);
-            cumulative_heights += step_height;
-            ctx.arc(0, 0, cumulative_heights, 0, 2 * Math.PI, true);
-            ctx.fill();
 
         }
+        
+        
+        let disk_size = 0;
+        let cumulative_sizes = 0;
+        for (var i = this.steps_value.length - 1; i > 0; i--) {
+            
+            ctx.fillStyle = `rgba(0, 0, 0, ${disk_size / 200})`;
+            
+            disk_size = this.steps_value[i] * 5000; 
+
+            ctx.beginPath();
+            ctx.arc(0, 0, cumulative_sizes, 0, 2 * Math.PI);
+            cumulative_sizes += disk_size;
+            ctx.arc(0, 0, cumulative_sizes, 0, 2 * Math.PI, true);
+            ctx.fill();
+        }
+        
 
         //ctx.stroke();
 
