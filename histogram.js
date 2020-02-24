@@ -4,21 +4,25 @@ class Histogram {
      * 
      * @param {*} x 
      * @param {*} y 
-     * @param {*} size 
+     * @param {*} radius 
      */
-    constructor(x, y, size){
+    constructor(x, y) {
+
         this.pos = vec2.create(x, y);
-        this.size = size;
-        this.width = 10;
+
+        this.radius = 150;
+        this.ticks_per_rotation = 60;
+
+
         this.rotation = 0;
-        this.bars =[]
         this.time = 0;
- }
+        this.bars = [];
+    }
     /**
      * 
      * @param {*} noise a value
      */
-    update(noise){
+    update(noise) {
         //update the height with the noises
 
 
@@ -31,65 +35,51 @@ class Histogram {
     /**
      * 
      */
-    createCircle(){
-  
+    render(){
+
         let barWidth = 100;
-        let barHeight = 1
-
-
-        let bars = 60;
-        
-        let r = 140;
+        let barHeight = 1;
 
 
 
-        for (var i = 0; i < 360; i += (360 / bars)) {
-        // Find the rectangle's position on circle edge
-            var angle = i * ((Math.PI * 2) / bars);
+        for (var i = 0; i < 360; i += (360 / this.ticks_per_rotation)) {
+            // Find the rectangle's position on circle edge
+            var angle = i * ((Math.PI * 2) / this.ticks_per_rotation);
             //var x = Math.cos(angle)*r+(canvas.width/2);
             //var y = Math.sin(angle)*r+(canvas.height/2);
-            barWidth = 2 * Math.PI * r / bars;
+            barWidth = 2 * Math.PI * this.radius / this.ticks_per_rotation;
             //console.log("i= "+i);
 
             if(this.bars[i]){
-                barHeight = (this.bars[i]*500);      //gestion de la hauteur de la barre           
+                barHeight = (this.bars[i] * 500);      //gestion de la hauteur de la barre           
             }else{
                 barHeight = 1;
             }
-            
-            ctxVisuData.save();
-            ctxVisuData.translate(this.pos.x,this.pos.y);
-            ctxVisuData.fillStyle = "green";
+
+            ctx.save();
+            ctx.translate(this.pos.x,this.pos.y);
+            ctx.fillStyle = "green";
 
             // Rotate the rectangle according to position
             // ctx.rotate(i*Math.PI/180); - DOESN'T WORK
 
             // Draw the rectangle
-            
-            ctxVisuData.rotate(i * Math.PI / 180);
 
-            ctxVisuData.fillRect(r, -barWidth / 2, barHeight, barWidth);
+            ctx.rotate(i * Math.PI / 180);
+
+            ctx.fillRect(this.radius, -barWidth / 2, barHeight, barWidth);
 
             //ctx.fillRect(r ,0, barHeight, barWidth);
 
-            ctxVisuData.restore();
+            ctx.restore();
         }
-        
-    }
 
-    /**
-     * 
-     */
-    render(){
-
-        this.createCircle();
-        if(this.time >= 360){
-            this.time=0;
-            //this.bars = []
-        }else {
+        if(this.time >= 360) {
+            this.time = 0;
+        } else {
             this.time += 1; 
         }
-        
+
 
     }
 }

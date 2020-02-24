@@ -21,17 +21,19 @@ class Aquarium {
 
     render() {
         
-        ctx.strokeStyle = '#333';
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
         
        
         ctx.beginPath();
          //contour du rectangle
         ctx.rect(this.pos.x, this.pos.y, this.width, this.height);
 
+        /*
         //remplissage en blanc, avec variable oppacité (valeur entre 0 et 1)
         let oppacity = 1
         ctx.fillStyle ='rgba(255, 255, 255,'+(oppacity)+')'
         ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+        */
 
 
         ctx.stroke();

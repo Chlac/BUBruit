@@ -1,29 +1,19 @@
-let canvas, ctx, aquariums, noises,ctxVisuData,history,disque,histo,frame;
+let canvas, ctx, aquariums, noises_real_time, noise_history, frame;
 let audioContext = null;
 let audiometer = null;
 
 onload = () => {
 
-    aquariums = [];
-    noises = [];
-    history= []; //historique pour la visdu de disque.js
-    frame =0;
-
-    canvas  = document.querySelector('canvas');
-    ctx     = canvas.getContext('2d');
-
-    canvasHisto = document.getElementById("histo");
-    ctxVisuData = canvasHisto.getContext('2d');
-
-    canvas.width  = window.innerWidth;
+    canvas = document.querySelector('canvas');
+    canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    //Taille du cavas pour les données
-    ctxVisuData.width = window.innerWidth;
-    ctxVisuData.height = window.innerHeight;
+    ctx = canvas.getContext('2d');
 
-    disque = new Disque (ctxVisuData.width/2,ctxVisuData.height/2,200,10,10);
-    histo = new Histogram(ctxVisuData.width/2,ctxVisuData.height/2,50,60)
+    aquariums = [];
+    noises_real_time = [];
+    noise_history = new History(canvas.width / 2, canvas.height / 2);
+    //frame = 0;
 
     let num_rows = 3;
     let num_cols = 3;
@@ -46,13 +36,14 @@ onload = () => {
 
             if(i != 1 || j != 1)
                 aquarium.addBoids(
-                    Array(15)
+                    Array(12)
                     .fill()
                     .map(
-                        b => new Boid(
+                        (b, i) => new Boid(
                             Math.random() * aquarium.width + aquarium.pos.x,
                             Math.random() * aquarium.height + aquarium.pos.y,
-                            aquarium
+                            aquarium,
+                            i
                         )
                     )
                 );
@@ -62,8 +53,6 @@ onload = () => {
         }
     }
 
-    
-
 
     ctx.font = "15px Arial";
     ctx.textAlign = "left";
@@ -71,47 +60,32 @@ onload = () => {
 
 }
 
-function onMicrophoneDenied() {
-    alert('Stream generation failed.');
-}
-
-var mediaStreamSource = null;
-
+let mediaStreamSource = null;
 function onMicrophoneGranted(stream) {
     // Create an AudioNode from the stream.
     mediaStreamSource = audioContext.createMediaStreamSource(stream);
 
-    // Create a new volume meter and connect it.
-    meter = createAudioMeter(audioContext);
-    mediaStreamSource.connect(meter);
+    // Create a new volume audiometer and connect it.
+    audiometer = AudioMeter.createAudioMeter(audioContext);
+    mediaStreamSource.connect(audiometer);
 
     // kick off updating
-    update();
+    update(0);
 }
 
 function processAudioChunk( time ) {
 
     // check if we're currently clipping
-    //if (meter.checkClipping())
+    //if (audiometer.checkClipping())
     // SEUIL DEPASSE
     //else
     // SOUS LE SEUIL
 
-    noises.push(new Noise(meter.volume, canvas.width / 2, canvas.height / 2));
-    history.push(meter.volume); // on récupere le volume
-    histo.update(meter.volume);
-    //console.log(meter.volume);
+    return(audiometer.volume); // on récupere le volume
 }
 
 onclick = (e) => {
 
-    /*if(e.button == 0){
-        let noise = new Noise(e.pageX, e.pageY);
-        noises.push(noise);
-        histo.update(10);
-        //disque.addRing(noise);
-    }
-    */
     if(audioContext == null) {
 
         // monkeypatch Web Audio
@@ -139,15 +113,18 @@ onclick = (e) => {
 
             navigator.mediaDevices.getUserMedia(constraints)
                 .then(onMicrophoneGranted)
-                .catch(function(err) { console.log(err.name + ": " + err.message); });
+                .catch(function(err) { 
+                console.log(err); 
+            }
+                      );
 
         } catch (e) {
-            console.log(err.name + ": " + err.message);
+            console.log(e.name + ": " + e.message);
         }
 
     }
 
-    noises.push(new Noise(0.05, e.pageX, e.pageY));
+    noises_real_time.push(new Noise(0.05, e.pageX, e.pageY));
 
 }
 
@@ -155,96 +132,60 @@ oncontextmenu = (e) => {
     e.preventDefault();
 }
 
-function createAudioMeter(audioContext,clipLevel,averaging,clipLag) {
-    var processor = audioContext.createScriptProcessor(512);
-    processor.onaudioprocess = volumeAudioProcess;
-    processor.clipping = false;
-    processor.lastClip = 0;
-    processor.volume = 0;
-    processor.clipLevel = clipLevel || 0.98;
-    processor.averaging = averaging || 0.95;
-    processor.clipLag = clipLag || 750;
+let max = 0;
 
-    // this will have no effect, since we don't copy the input to the output,
-    // but works around a current Chrome bug.
-    processor.connect(audioContext.destination);
+let t = 0;
 
-    processor.checkClipping =
-        function(){
-        if (!this.clipping)
-            return false;
-        if ((this.lastClip + this.clipLag) < window.performance.now())
-            this.clipping = false;
-        return this.clipping;
-    };
+const update = (time) => {
 
-    processor.shutdown =
-        function(){
-        this.disconnect();
-        this.onaudioprocess = null;
-    };
+    let current_volume = processAudioChunk();
 
-    return processor;
-}
-
-function volumeAudioProcess( event ) {
-    var buf = event.inputBuffer.getChannelData(0);
-    var bufLength = buf.length;
-    var sum = 0;
-    var x;
-
-    // Do a root-mean-square on the samples: sum up the squares...
-    for (var i=0; i<bufLength; i++) {
-        x = buf[i];
-        if (Math.abs(x)>=this.clipLevel) {
-            this.clipping = true;
-            this.lastClip = window.performance.now();
-        }
-        sum += x * x;
-    }
-
-    // ... then take the square root of the sum.
-    var rms =  Math.sqrt(sum / bufLength);
-
-    // Now smooth this out with the averaging factor applied
-    // to the previous sample - take the max here because we
-    // want "fast attack, slow release."
-    this.volume = Math.max(rms, this.volume*this.averaging);
-}
-
-
-const update = () => {
-
-    processAudioChunk();
-
-    
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    disqueVisu();
-
-    
-    
     for(let aquarium of aquariums) {
-        aquarium.update(noises);
-        aquarium.render();
+        aquarium.update(noises_real_time);
     }
 
-    histo.render();
+    noises_real_time.push(new Noise(current_volume, canvas.width / 2, canvas.height / 2));
+    noises_real_time.map(o => o.update());
+    noises_real_time = noises_real_time.filter(o => o.strength != 0);
+
+    noise_history.update(current_volume, time); 
+
 
     
-    noises.map(o => o.update());
-    noises = noises.filter(o => o.strength != 0);
-    noises.map(o => o.render());
+    render();
+    
+        
+    let fps = 1000 / (time - t);
+    t = time;
 
-    //ctx.fillStyle = 'rgba(20, 20, 20, 0.7)'
-    //ctx.fillText('Total boids: ' + boids.length, 5, 5);
-
+    ctx.font = "25px Arial";
+    ctx.fillStyle = 'black';
+    ctx.fillText('FPS: ' + fps, 20, 20);
+    
     requestAnimationFrame(update);
 
 }
+
+
+function render() {
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    noise_history.render();
+
+    for(let aquarium of aquariums) {
+        aquarium.render();
+    }
+    
+    noises_real_time.map(o => o.render());
+
+
+}
+
 /**
  * Rendu du disque d'historique, selon un certaine nombre de frame
  */
+/*
 function disqueVisu() {
     if (frame < 200) {
         frame++;
@@ -252,10 +193,10 @@ function disqueVisu() {
         // histo.render();
     }
     else {
-        //console.log(noises)
-        disque.update(history);
-        history = []; //on reset l'historique
+        //console.log(noises_real_time)
+        disque.update(noise_history);
+        noise_history = []; //on reset l'historique
         frame = 0;
     }
-}
+}*/
 

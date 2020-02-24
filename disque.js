@@ -54,7 +54,7 @@ class Disque {
         let size = this.size;        
         for(let i = this.rings.length-1;i>=0;i--){
             size=size+this.witdh;
-            ctxVisuData.save();
+            ctx.save();
             //console.log("this.rings["+i+"] = "+this.rings[i]);
             //ctxHisto.lineWidth = this.rings[i];
            // console.log("this ring["+ring+"] ="+this.rings[ring]);
@@ -64,18 +64,18 @@ class Disque {
             * 0 = invisible
             * 1 = Remplit
             */
-           ctxVisuData.strokeStyle = 'rgba(20, 20, 20, ' + (0) + ')';
+           ctx.strokeStyle = 'rgba(20, 20, 20, ' + (0) + ')';
 
            //Début du rendu 
-           ctxVisuData.beginPath();
+           ctx.beginPath();
 
             //disque
-            ctxVisuData.arc(this.pos.x, this.pos.y, size+this.witdh, 0, 2 * Math.PI); // exterieur
-            ctxVisuData.arc(this.pos.x, this.pos.y, size, 0, 2 * Math.PI,true); //interieur
-            ctxVisuData.stroke();
+            ctx.arc(this.pos.x, this.pos.y, size+this.witdh, 0, 2 * Math.PI); // exterieur
+            ctx.arc(this.pos.x, this.pos.y, size, 0, 2 * Math.PI,true); //interieur
+            ctx.stroke();
 
             //creation du gradiant de couleur (blanc vers noir); pas utilisé 
-           // var radialGradient = ctxVisuData.createRadialGradient(this.pos.x, this.pos.y, size, this.pos.x, this.pos.y, size+10);
+           // var radialGradient = ctx.createRadialGradient(this.pos.x, this.pos.y, size, this.pos.x, this.pos.y, size+10);
            //radialGradient.addColorStop(0, "white");
             //radialGradient.addColorStop(1, "black");
 
@@ -86,10 +86,10 @@ class Disque {
              * La même chose que pour le contour des anneaux
              * calcul : une valeur entre 0 et 1 (pour l'oppacité)
              */
-            ctxVisuData.fillStyle = 'rgba(0, 0, 0, '+(calcul)+')';
-            ctxVisuData.fill();
+            ctx.fillStyle = 'rgba(0, 0, 0, '+(calcul)+')';
+            ctx.fill();
 
-            ctxVisuData.restore();
+            ctx.restore();
         }
 
         

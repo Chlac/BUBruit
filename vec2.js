@@ -11,8 +11,10 @@ class vec2 {
     }
     norm() {
         let m = this.mag();
-        this.x /= m;
-        this.y /= m;
+        if (m > 0) {
+            this.x /= m;
+            this.y /= m;
+        }
     }
     getAngle() {
         let vec = vec2.norm(this);
