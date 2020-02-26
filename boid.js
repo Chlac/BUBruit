@@ -8,13 +8,13 @@ class Boid {
 static MAXFORCE = .03; // Alignment and cohere max force
 static ALIGNMENT_WEIGHT  = 1;
 static COHESION_WEIGHT   = 1;
-static SEPARATION_WEIGHT = 8;
+static SEPARATION_WEIGHT = 5;
 static FLIGHT_WEIGHT = 2;
-static BOUNDS_WEIGHT = 0.01;
+static BOUNDS_WEIGHT = 1;
 
-static vision_field = 50;
-static hearing_field = 30;
-static cohere_radius = 50;
+static vision_field = 100;
+static hearing_field = 50;
+static cohere_radius = 100;
 static separate_radius = 80;
 static avoid_walls_radius = 60;
 
@@ -31,8 +31,8 @@ static num_of_body_sections = 5;
 static num_of_tail_sections = 4;
 static num_of_sections = Boid.num_of_body_sections + Boid.num_of_tail_sections;
 static section_length = Boid.length / (Boid.num_of_sections);
-static _max_waving_angle = 0.16;
-static waving_speed = 0.05;
+static _max_waving_angle = 0.125;
+static waving_speed = 0.038;
 static shadow_color = "rgba(0, 0, 0, 0)";
 static shadow_blur = 6;
 static shadow_offset_x = 3;
@@ -52,14 +52,16 @@ constructor(x, y, aquarium, id) {
     this.fear_level = 0;
 
     this._color = {
-        r: 240,
-        g: 240,
-        b: 240,
+        r: 225,
+        g: 225,
+        b: 225,
     };
 
     this.spine = Array(Boid.num_of_sections).fill().map(
         (s, i) => vec2.create(this.pos.x + (Boid.width / 2), this.pos.y + (i * Boid.section_length))
     );
+
+    this.random_direction = vec2.fromAngleAndMagnitude(Math.random() * Math.PI * 2, 3);
 
 }
 
@@ -72,11 +74,11 @@ get color() {
 }
 
 get max_speed() {
-    return Boid._max_speed + this.fear_level / 45;
+    return Boid._max_speed + this.fear_level / 50;
 }
 
 get max_waving_angle() {
-    return (this.vel.mag() / 1.2) * Boid._max_waving_angle;
+    return this.vel.mag() * Boid._max_waving_angle;
 }
 
 update(boids, noises) {
@@ -106,21 +108,44 @@ update(boids, noises) {
 
 move() {
 
+
+    if(Math.random() + ((this.fear_level / Boid.max_fear) / 32) > 0.96) {
+        this.random_direction = vec2.fromAngleAndMagnitude(Math.random() * Math.PI * 2, 1);
+        this.random_direction.mult(this.fear_level / Boid.max_fear);
+        this.random_direction.limit(this.max_speed);
+    }
+
+    this.vel.add(this.random_direction);
     this.vel.add(this.acc);
     this.vel.limit(this.max_speed);
     this.pos.add(this.vel);
 
-    if(this.pos.x < this.aquarium.pos.x) {
-        this.pos.x = this.aquarium.pos.x;
-    }
-    if(this.pos.y < this.aquarium.pos.y) {
-        this.pos.y = this.aquarium.pos.y;
-    }
-    if(this.pos.x > this.aquarium.pos.x + this.aquarium.width) {
-        this.pos.x = this.aquarium.pos.x + this.aquarium.width;
-    }
-    if(this.pos.y > this.aquarium.pos.y + this.aquarium.height) {
-        this.pos.y = this.aquarium.pos.y + this.aquarium.height;
+    if(this.aquarium.shape === Aquarium.SHAPE.RECTANGLE) {
+        if(this.pos.x < this.aquarium.pos.x) {
+            this.pos.x = this.aquarium.pos.x;
+        }
+        if(this.pos.y < this.aquarium.pos.y) {
+            this.pos.y = this.aquarium.pos.y;
+        }
+        if(this.pos.x > this.aquarium.pos.x + this.aquarium.width) {
+            this.pos.x = this.aquarium.pos.x + this.aquarium.width;
+        }
+        if(this.pos.y > this.aquarium.pos.y + this.aquarium.height) {
+            this.pos.y = this.aquarium.pos.y + this.aquarium.height;
+        }
+    } else if(this.aquarium.shape === Aquarium.SHAPE.ELLIPSE) {
+
+        let vec = vec2.sub(this.pos, this.aquarium.pos);
+        let angle = vec.getAngle();
+
+        if(vec.mag() >= this.aquarium.width / 2) {
+
+            this.pos.x = this.aquarium.pos.x + ((this.aquarium.width / 2) * Math.cos(angle));
+            this.pos.y = this.aquarium.pos.y + ((this.aquarium.width / 2) * -Math.sin(angle));
+
+            this.pos.add(vec2.div(this.random_direction, 1));
+            //this.vel.limit(this.max_speed);
+        }
     }
 
 
@@ -232,8 +257,10 @@ fleeNoises(noises) {
 
     let sum = vec2.create(0, 0);
 
+    let ratio = canvas.width / canvas.height;
+
     let nearNOISES = noises.filter(n => {
-        return (this.pos.distanceTo(n.pos) < Boid.hearing_field + n.radius);
+        return (this.pos.distanceTo(n.pos) < Boid.hearing_field + Math.max(n.radius, n.radius * ratio));
     });
 
     nearNOISES.map(n => {
@@ -268,25 +295,31 @@ fleeNoises(noises) {
 stayInside() {
 
     let sum = vec2.create(0, 0);
+    if(this.aquarium.shape === Aquarium.SHAPE.RECTANGLE) {
+        if (this.pos.x < this.aquarium.pos.x + Boid.avoid_walls_radius) {
+            let mult = this.pos.distanceTo(vec2.create(this.aquarium.pos.x, this.pos.y));
+            sum.x = 1 / (1 + mult);
+        }
+        else if (this.pos.x > this.aquarium.pos.x + this.aquarium.width - Boid.avoid_walls_radius) {
+            let mult = this.pos.distanceTo(vec2.create(this.aquarium.pos.x + this.aquarium.width, this.pos.y));
+            sum.x = -1 / (1 + mult);
+        }
 
-    if (this.pos.x < this.aquarium.pos.x + Boid.avoid_walls_radius) {
-        let mult = this.pos.distanceTo(vec2.create(this.aquarium.pos.x, this.pos.y));
-        sum.x = Boid.avoid_walls_radius / (1 + mult);
-    }
-    else if (this.pos.x > this.aquarium.pos.x + this.aquarium.width - Boid.avoid_walls_radius) {
-        let mult = this.pos.distanceTo(vec2.create(this.aquarium.pos.x + this.aquarium.width, this.pos.y));
-        sum.x = -Boid.avoid_walls_radius / (1 + mult);
-    }
+        if(this.pos.y < this.aquarium.pos.y + Boid.avoid_walls_radius) {
+            let mult = this.pos.distanceTo(vec2.create(this.pos.x, this.aquarium.pos.y));
+            sum.y = 1 / (1 + mult);
 
-    if(this.pos.y < this.aquarium.pos.y + Boid.avoid_walls_radius) {
-        let mult = this.pos.distanceTo(vec2.create(this.pos.x, this.aquarium.pos.y));
-        sum.y = Boid.avoid_walls_radius / (1 + mult);
+        }
+        else if (this.pos.y > this.aquarium.pos.y + this.aquarium.height - Boid.avoid_walls_radius) {
+            let mult = this.pos.distanceTo(vec2.create(this.pos.x, this.aquarium.pos.y + this.aquarium.height));
+            sum.y = -1 / (1 + mult);
 
-    }
-    else if (this.pos.y > this.aquarium.pos.y + this.aquarium.height - Boid.avoid_walls_radius) {
-        let mult = this.pos.distanceTo(vec2.create(this.pos.x, this.aquarium.pos.y + this.aquarium.height));
-        sum.y = -Boid.avoid_walls_radius / (1 + mult);
-
+        }
+    } else if(this.aquarium.shape === Aquarium.SHAPE.ELLIPSE) {
+        let distance = vec2.sub(this.pos, this.aquarium.pos).mag();
+        if(distance >= this.aquarium.width / 2 - Boid.avoid_walls_radius) {
+            sum = vec2.mult(vec2.sub(this.pos, this.aquarium.pos), -0.00008 * (distance / (this.aquarium.width / 2)));
+        }
     }
 
     return sum;
@@ -320,10 +353,10 @@ steerTo(target) {
 render() {
 
     ctx.save();
-    
+
     //ctx.font = "10px Arial";
     //ctx.fillStyle = 'black';
-    //ctx.fillText(this.fear_level, this.pos.x + 10, this.pos.y);
+    //ctx.fillText(this.a, this.pos.x + 15, this.pos.y + 15);
 
 
     // HEAD
@@ -412,14 +445,14 @@ render() {
         vec2.add(vec2.add(anchor_points[1].right, vec2.mult(anchor_points[1].normal, Boid.width / (1.5))), vec2.mult(anchor_points[1].section_angle, 0.5)),
         vec2.add(anchor_points[1].center, vec2.mult(anchor_points[1].section_angle, -0.8))
     );
-    
-    
-    
+
+
+
     ctx.shadowColor = Boid.shadow_color;
     ctx.shadowBlur = Boid.shadow_blur;
     ctx.shadowOffsetX =  Boid.shadow_offset_x;
     ctx.shadowOffsetY =  Boid.shadow_offset_y;
-    
+
     ctx.fillStyle = 'rgb(' + this.color.r + ',' + this.color.g + ',' + this.color.b + ')';
 
     // DRAW HEAD
@@ -454,8 +487,8 @@ render() {
     ctx.moveTo(fins.right[0].x, fins.right[0].y);
     ctx.bezierCurveTo(fins.right[1].x, fins.right[1].y, fins.right[2].x, fins.right[2].y, fins.right[3].x, fins.right[3].y);
     ctx.fill();
-    
-    
+
+
 
     ctx.restore();
 }

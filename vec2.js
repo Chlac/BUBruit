@@ -18,11 +18,13 @@ class vec2 {
     }
     getAngle() {
         let vec = vec2.norm(this);
-        return Math.atan2(vec.y, vec.x) + Math.PI / 2;
+        return Math.atan2(vec.y, -vec.x) + Math.PI;
     }
 
     angleFrom(vec) {
-        return this.getAngle() - vec.getAngle();
+        let vec_1 = vec2.norm(this);
+        let vec_2 = vec2.norm(vec);
+        return (Math.atan2(vec_1.y, vec_1.x) + Math.PI) - (Math.atan2(vec_2.y, vec_2.x) + Math.PI);
     }
     distanceTo(vec) {
 

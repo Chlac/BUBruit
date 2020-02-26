@@ -2,6 +2,8 @@ let canvas, ctx, aquariums, noises_real_time, noise_history, frame;
 let audioContext = null;
 let audiometer = null;
 
+let tables = false;
+
 onload = () => {
 
     canvas = document.querySelector('canvas');
@@ -16,41 +18,69 @@ onload = () => {
     //frame = 0;
 
     let num_rows = 3;
-    let num_cols = 3;
+    let num_cols = 5;
 
     let space = 30;
 
-    for(let i = 0; i < num_rows; i++) {
+    if(tables) {
+        for(let i = 0; i < num_rows; i++) {
 
-        for(let j = 0; j < num_cols; j++) {
+            for(let j = 0; j < num_cols; j++) {
 
-            let aquarium_width = (canvas.width / num_cols) - space;
-            let aquarium_height = (canvas.height / num_rows) - space;
+                let aquarium_width = (canvas.width / num_cols) - space;
+                let aquarium_height = (canvas.height / num_rows) - space;
 
-            let aquarium = new Aquarium(
-                space / 2 + (space + aquarium_width) * j, 
-                space / 2 + (space + aquarium_height) * i, 
-                aquarium_width, 
-                aquarium_height
-            );
-
-            if(i != 1 || j != 1)
-                aquarium.addBoids(
-                    Array(12)
-                    .fill()
-                    .map(
-                        (b, i) => new Boid(
-                            Math.random() * aquarium.width + aquarium.pos.x,
-                            Math.random() * aquarium.height + aquarium.pos.y,
-                            aquarium,
-                            i
-                        )
-                    )
+                let aquarium = new Aquarium(
+                    space / 2 + (space + aquarium_width) * j, 
+                    space / 2 + (space + aquarium_height) * i, 
+                    aquarium_width, 
+                    aquarium_height
                 );
 
-            aquariums.push(aquarium);
+                if(i != 1 || j != 2)
+                    aquarium.addBoids(
+                        Array(6)
+                        .fill()
+                        .map(
+                            (b, i) => new Boid(
+                                Math.random() * aquarium.width + aquarium.pos.x,
+                                Math.random() * aquarium.height + aquarium.pos.y,
+                                aquarium,
+                                i
+                            )
+                        )
+                    );
 
+                aquariums.push(aquarium);
+
+            }
         }
+    } else {
+        let aquarium_width = canvas.width - space;
+        let aquarium_height = canvas.height - space;
+
+        let aquarium = new Aquarium(
+            canvas.width / 2, 
+            canvas.height / 2, 
+            aquarium_height,
+            aquarium_height,
+            Aquarium.SHAPE.ELLIPSE);
+
+        aquarium.addBoids(
+            Array(25)
+            .fill()
+            .map(
+                (b, i) => new Boid(
+                    Math.random() * aquarium.width / 1.5 + aquarium.pos.x - aquarium.width / 3,
+                    Math.random() * aquarium.height / 1.5 + aquarium.pos.y - aquarium.height / 3,
+                    aquarium,
+                    i
+                )
+            )
+        );
+
+
+        aquariums.push(aquarium);
     }
 
 
@@ -151,17 +181,17 @@ const update = (time) => {
     noise_history.update(current_volume, time); 
 
 
-    
+
     render();
-    
-        
+
+
     let fps = 1000 / (time - t);
     t = time;
 
     ctx.font = "25px Arial";
     ctx.fillStyle = 'black';
     ctx.fillText('FPS: ' + fps, 20, 20);
-    
+
     requestAnimationFrame(update);
 
 }
@@ -170,13 +200,13 @@ const update = (time) => {
 function render() {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
+
     noise_history.render();
 
     for(let aquarium of aquariums) {
         aquarium.render();
     }
-    
+
     noises_real_time.map(o => o.render());
 
 

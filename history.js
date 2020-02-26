@@ -30,6 +30,7 @@ class History {
         this.shift = 1;
 
         this.steps_min_value = 0.0002;
+        this.steps_base_value = 20;
         this.steps_value = Array(this.covered_period_duration / this.step).fill(this.steps_min_value);
 
         // Last recorded time since app launching in milliseconds
@@ -95,12 +96,12 @@ class History {
 
         ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
 
-        ctx.beginPath();
 
         ctx.save();
-
         ctx.translate(this.pos.x, this.pos.y);
-        //ctx.rotate(angle);
+
+        /*
+        ctx.beginPath();
 
         for (var i = 0; i < this.steps_value.length; i++) {
 
@@ -128,22 +129,26 @@ class History {
             //ctx.fillText(step_height, 50, 50);
             //ctx.fillStyle = `rgba(${255 / step_height}, ${255 / step_height}, ${255 / step_height}, 0.1)`;
 
-        }
+        //}
         
         
-        let disk_size = 0;
         let cumulative_sizes = 0;
-        for (var i = this.steps_value.length - 1; i > 0; i--) {
+        let index = this.nb_of_steps_since_current_period_start;
+        
+        while (index !== (this.nb_of_steps_since_current_period_start + 1) % this.steps_value.length && cumulative_sizes < canvas.height / 2.5) {
             
-            ctx.fillStyle = `rgba(0, 0, 0, ${disk_size / 200})`;
+            ctx.fillStyle = `rgba(0, 0, 0, ${(this.steps_value[index] * 5000) / 220})`;
             
-            disk_size = this.steps_value[i] * 5000; 
+            //disk_size = this.steps_value[index] * 5000; 
 
             ctx.beginPath();
             ctx.arc(0, 0, cumulative_sizes, 0, 2 * Math.PI);
-            cumulative_sizes += disk_size;
+            cumulative_sizes += this.steps_base_value;
             ctx.arc(0, 0, cumulative_sizes, 0, 2 * Math.PI, true);
             ctx.fill();
+            
+            if(index === 0) index = this.steps_value.length - 1;
+            else index--;
         }
         
 
